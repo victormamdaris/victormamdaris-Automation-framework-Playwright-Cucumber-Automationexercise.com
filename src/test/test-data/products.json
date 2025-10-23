@@ -1,0 +1,21 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "Blue Top",
+      "category": "Women > Tops",
+      "price": "Rs. 500"
+    },
+    {
+      "id": "2",
+      "name": "Men Tshirt",
+      "category": "Men > Tshirts",
+      "price": "Rs. 400"
+    }
+  ],
+  "searchTerms": {
+    "valid": "Blue Top",
+    "partial": "shirt",
+    "noResults": "NonExistentProduct123"
+  }
+}

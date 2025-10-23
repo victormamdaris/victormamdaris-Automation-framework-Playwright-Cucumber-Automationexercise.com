@@ -1,0 +1,270 @@
+name: UI Tests Execution
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/test/features/ui/**'
+      - 'src/test/pages/**'
+      - 'src/test/steps/ui/**'
+      - 'src/test/locators/**'
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run tests'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      browser:
+        description: 'Browser to use for UI tests'
+        required: true
+        default: 'chromium'
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+          - all
+      tags:
+        description: 'Test tags to run (e.g., @smoke, @login, @products)'
+        required: false
+        default: '@smoke'
+      headless:
+        description: 'Run browser in headless mode'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  ui-smoke-tests:
+    name: UI Smoke Tests - ${{ matrix.browser }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Load environment configuration
+        run: cp .env.dev .env
+
+      - name: Run UI Smoke Tests
+        env:
+          ENV: dev
+          BROWSER: ${{ matrix.browser }}
+          HEADLESS: true
+          SCREENSHOT_ON_FAILURE: true
+          VIDEO_ON_FAILURE: false
+          CI: true
+        run: npx cucumber-js --profile ui --tags "@smoke and @ui"
+
+      - name: Upload Screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-ui-smoke-${{ matrix.browser }}
+          path: screenshots/
+          retention-days: 7
+
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-ui-smoke-${{ matrix.browser }}
+          path: reports/
+          retention-days: 30
+
+      - name: Generate Serenity Report
+        if: always()
+        run: npm run serenity:report
+
+      - name: Upload Serenity Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serenity-report-ui-smoke-${{ matrix.browser }}
+          path: target/site/serenity/
+          retention-days: 30
+
+  ui-custom-tests:
+    name: UI Tests - ${{ inputs.browser }} - ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ inputs.browser == 'all' && fromJSON('["chromium", "firefox", "webkit"]') || fromJSON(format('["{0}"]', inputs.browser)) }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Load environment configuration
+        run: |
+          if [ -f ".env.${{ inputs.environment }}" ]; then
+            cp .env.${{ inputs.environment }} .env
+            echo "Loaded .env.${{ inputs.environment }}"
+          else
+            echo "Warning: .env.${{ inputs.environment }} not found, using defaults"
+          fi
+
+      - name: Run UI Tests
+        env:
+          ENV: ${{ inputs.environment }}
+          BROWSER: ${{ matrix.browser }}
+          HEADLESS: ${{ inputs.headless }}
+          SCREENSHOT_ON_FAILURE: true
+          VIDEO_ON_FAILURE: true
+          CI: true
+        run: |
+          if [ -n "${{ inputs.tags }}" ]; then
+            npx cucumber-js --profile ui --tags "${{ inputs.tags }}"
+          else
+            npm run test:ui
+          fi
+
+      - name: Upload Screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-ui-${{ matrix.browser }}-${{ inputs.environment }}
+          path: screenshots/
+          retention-days: 7
+
+      - name: Upload Videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-ui-${{ matrix.browser }}-${{ inputs.environment }}
+          path: videos/
+          retention-days: 7
+
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-ui-${{ matrix.browser }}-${{ inputs.environment }}
+          path: reports/
+          retention-days: 30
+
+      - name: Generate Serenity Report
+        if: always()
+        run: npm run serenity:report
+
+      - name: Upload Serenity Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serenity-report-ui-${{ matrix.browser }}-${{ inputs.environment }}
+          path: target/site/serenity/
+          retention-days: 30
+
+  ui-regression-tests:
+    name: UI Regression - All Browsers
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.tags == '@regression'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        environment: [dev, staging]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Load environment configuration
+        run: cp .env.${{ matrix.environment }} .env
+
+      - name: Run UI Regression Tests
+        env:
+          ENV: ${{ matrix.environment }}
+          BROWSER: ${{ matrix.browser }}
+          HEADLESS: true
+          SCREENSHOT_ON_FAILURE: true
+          VIDEO_ON_FAILURE: true
+          CI: true
+        run: npm run test:regression
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-ui-regression-${{ matrix.browser }}-${{ matrix.environment }}
+          path: |
+            reports/
+            screenshots/
+            videos/
+          retention-days: 30
+
+      - name: Generate Serenity Report
+        if: always()
+        run: npm run serenity:report
+
+      - name: Upload Serenity Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serenity-report-regression-${{ matrix.browser }}-${{ matrix.environment }}
+          path: target/site/serenity/
+          retention-days: 30

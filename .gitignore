@@ -1,0 +1,57 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript build output
+dist/
+*.tsbuildinfo
+
+# Test results and reports
+test-results/
+reports/
+*.log
+cucumber-report.html
+cucumber-report.json
+target/
+
+# Runtime data
+src/test/data/runtime/*
+!src/test/data/runtime/.gitkeep
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Note: These files SHOULD be committed:
+# .env.example (template)
+# .env.dev (development config)
+# .env.staging (staging config)
+# .env.prod (production config)
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Playwright
+playwright-report/
+playwright/.cache/
+test-results/
+
+# Screenshots and videos
+screenshots/
+videos/
+downloads/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# OS
+Thumbs.db

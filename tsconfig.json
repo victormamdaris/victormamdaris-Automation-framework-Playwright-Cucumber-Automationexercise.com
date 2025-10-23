@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@config/*": ["src/test/config/*"],
+      "@core/*": ["src/test/core/*"],
+      "@data/*": ["src/test/data/*"],
+      "@fixtures/*": ["src/test/fixtures/*"],
+      "@helpers/*": ["src/test/helpers/*"],
+      "@locators/*": ["src/test/locators/*"],
+      "@pages/*": ["src/test/pages/*"],
+      "@services/*": ["src/test/services/*"],
+      "@steps/*": ["src/test/steps/*"],
+      "@support/*": ["src/test/support/*"],
+      "@test-data/*": ["src/test/test-data/*"],
+      "@types/*": ["src/test/types/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test-results",
+    "reports"
+  ]
+}

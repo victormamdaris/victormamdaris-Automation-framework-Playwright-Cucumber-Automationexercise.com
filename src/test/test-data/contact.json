@@ -1,0 +1,20 @@
+{
+  "validContact": {
+    "name": "John Doe",
+    "email": "john.doe@test.com",
+    "subject": "Product Inquiry",
+    "message": "I would like to know more about your products. Could you please provide detailed information?"
+  },
+  "supportContact": {
+    "name": "Jane Smith",
+    "email": "jane.smith@test.com",
+    "subject": "Technical Support",
+    "message": "I am experiencing issues with my account. Please help me resolve this issue."
+  },
+  "feedbackContact": {
+    "name": "Bob Johnson",
+    "email": "bob.johnson@test.com",
+    "subject": "Website Feedback",
+    "message": "Great website! I really enjoy shopping here. Keep up the good work!"
+  }
+}
