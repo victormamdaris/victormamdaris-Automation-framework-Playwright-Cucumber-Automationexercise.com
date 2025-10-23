@@ -1,0 +1,4 @@
+This is a sample test file for contact form file upload.
+Created for automation testing purposes.
+File type: Text Document
+Test Framework: Playwright + Cucumber

@@ -1,0 +1,12 @@
+# Runtime Data
+
+This directory contains data generated during test execution. 
+
+**Note:** Files in this directory are gitignored and should not be committed to version control.
+
+## Generated Content
+
+- Temporary test data
+- Session information
+- Runtime caches
+- Generated test artifacts
