@@ -13,7 +13,8 @@ export class HomePage extends BasePage {
   }
 
   async clickProducts(): Promise<void> {
-    await this.click(HomePageLocators.PRODUCTS_LINK);
+    // Use .first() to avoid strict mode violation when multiple Products links exist (e.g., on cart page)
+    await this.page.locator(HomePageLocators.PRODUCTS_LINK).first().click();
   }
 
   async clickCart(): Promise<void> {

@@ -1,6 +1,309 @@
-import { When, Then } from '@cucumber/cucumber';
+import { When, Then, Given } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 import { APIRequestContext, request } from '@playwright/test';
+
+// ============================================================================
+// GIVEN STEPS - Preconditions
+// ============================================================================
+
+/**
+ * Background: Ensure API base URL is configured
+ */
+Given('the API base URL is configured', async function () {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  console.log(`\n✓ API Base URL configured: ${baseUrl}`);
+  // This is a declarative step that documents the API is ready
+  // The actual URL configuration happens via environment variables
+});
+
+// ============================================================================
+// DECLARATIVE API STEPS - Business-Readable, Third-Person
+// ============================================================================
+
+/**
+ * Declarative: System receives GET request
+ */
+When('the system receives a GET request to {string}', async function (endpoint: string) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: GET`);
+  console.log(`URL: ${url}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+  
+  const context = await request.newContext();
+  this.response = await context.get(url);
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Status Text: ${this.response.statusText()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives POST request with body
+ */
+When('the system receives a POST request to {string} with body:', async function (endpoint: string, dataTable: any) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  const data = dataTable.rowsHash();
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: POST`);
+  console.log(`URL: ${url}`);
+  console.log(`Body (Form Data):`);
+  console.log(JSON.stringify(data, null, 2));
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+  
+  const context = await request.newContext();
+  this.response = await context.post(url, { form: data });
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives DELETE request
+ */
+When('the system receives a DELETE request to {string}', async function (endpoint: string) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: DELETE`);
+  console.log(`URL: ${url}`);
+  
+  const context = await request.newContext();
+  this.response = await context.delete(url);
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives PUT request
+ */
+When('the system receives a PUT request to {string}', async function (endpoint: string) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: PUT`);
+  console.log(`URL: ${url}`);
+  
+  const context = await request.newContext();
+  this.response = await context.put(url);
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives POST request with empty body
+ */
+When('the system receives a POST request to {string} with empty body', async function (endpoint: string) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: POST`);
+  console.log(`URL: ${url}`);
+  console.log(`Body: (empty)`);
+  
+  const context = await request.newContext();
+  this.response = await context.post(url, { form: {} });
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives POST request with form data
+ */
+When('the system receives a POST request to {string} with form data:', async function (endpoint: string, dataTable: any) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  const data = dataTable.rowsHash();
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: POST`);
+  console.log(`URL: ${url}`);
+  console.log(`Form Data:`);
+  console.log(JSON.stringify(data, null, 2));
+  
+  const context = await request.newContext();
+  this.response = await context.post(url, { form: data });
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives GET request with parameter
+ */
+When('the system receives a GET request to {string} with parameter:', async function (endpoint: string, dataTable: any) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const params = dataTable.rowsHash();
+  
+  const queryString = new URLSearchParams(params).toString();
+  const url = `${baseUrl}${endpoint}?${queryString}`;
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: GET`);
+  console.log(`URL: ${url}`);
+  console.log(`Query Parameters:`, JSON.stringify(params, null, 2));
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+  
+  const context = await request.newContext();
+  this.response = await context.get(url);
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives GET request without parameters
+ */
+When('the system receives a GET request to {string} without parameters', async function (endpoint: string) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST (No Parameters)');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: GET`);
+  console.log(`URL: ${url}`);
+  
+  const context = await request.newContext();
+  this.response = await context.get(url);
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives PUT request with form data
+ */
+When('the system receives a PUT request to {string} with form data:', async function (endpoint: string, dataTable: any) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  const data = dataTable.rowsHash();
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: PUT`);
+  console.log(`URL: ${url}`);
+  console.log(`Form Data:`);
+  console.log(JSON.stringify(data, null, 2));
+  
+  const context = await request.newContext();
+  this.response = await context.put(url, { form: data });
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+/**
+ * Declarative: System receives DELETE request with body
+ */
+When('the system receives a DELETE request to {string} with body:', async function (endpoint: string, dataTable: any) {
+  const baseUrl = process.env.BASE_URL || 'https://automationexercise.com';
+  const url = `${baseUrl}${endpoint}`;
+  const data = dataTable.rowsHash();
+  
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📤 API REQUEST');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Method: DELETE`);
+  console.log(`URL: ${url}`);
+  console.log(`Body (Form Data):`);
+  console.log(JSON.stringify(data, null, 2));
+  
+  const context = await request.newContext();
+  this.response = await context.delete(url, { form: data });
+  this.responseBody = await this.response.json();
+  await context.dispose();
+  
+  console.log('\n📥 API RESPONSE');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`Status Code: ${this.response.status()}`);
+  console.log(`Response Body:`);
+  console.log(JSON.stringify(this.responseBody, null, 2));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+});
+
+// ============================================================================
+// LEGACY/IMPERATIVE API STEPS - Kept for backward compatibility
+// ============================================================================
 
 /**
  * Step: Send GET request to endpoint

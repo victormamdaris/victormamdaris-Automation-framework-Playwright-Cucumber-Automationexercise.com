@@ -11,6 +11,7 @@ export class LoginPage extends BasePage {
     await this.fill(LoginPageLocators.LOGIN_EMAIL, email);
     await this.fill(LoginPageLocators.LOGIN_PASSWORD, password);
     await this.click(LoginPageLocators.LOGIN_BUTTON);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async signup(name: string, email: string): Promise<void> {

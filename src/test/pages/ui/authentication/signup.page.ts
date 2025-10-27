@@ -46,6 +46,7 @@ export class SignupPage extends BasePage {
 
   async createAccount(): Promise<void> {
     await this.click(SignupPageLocators.CREATE_ACCOUNT_BUTTON);
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async isAccountCreatedMessageVisible(): Promise<boolean> {

@@ -16,15 +16,47 @@ export class CartPage extends BasePage {
   }
 
   async getProductName(index: number = 0): Promise<string> {
+    console.log(`📦 [CartPage.getProductName] Looking for product name at index ${index}`);
+    console.log(`📦 [CartPage.getProductName] Locator: ${CartPageLocators.PRODUCT_NAME}`);
+    
     const products = this.page.locator(CartPageLocators.PRODUCT_NAME);
-    await products.nth(index).waitFor({ state: 'visible', timeout: 10000 });
-    return await products.nth(index).textContent() || '';
+    const count = await products.count();
+    console.log(`📦 [CartPage.getProductName] Found ${count} product name elements`);
+    
+    console.log(`📦 [CartPage.getProductName] Waiting for element at index ${index} to be visible...`);
+    try {
+      await products.nth(index).waitFor({ state: 'visible', timeout: 10000 });
+      console.log(`📦 [CartPage.getProductName] Element is visible`);
+    } catch (error) {
+      console.error(`❌ [CartPage.getProductName] Element NOT visible after 10s:`, error);
+      throw error;
+    }
+    
+    const text = await products.nth(index).textContent() || '';
+    console.log(`📦 [CartPage.getProductName] Product name text: "${text}"`);
+    return text;
   }
 
   async getProductPrice(index: number = 0): Promise<string> {
+    console.log(`💰 [CartPage.getProductPrice] Looking for product price at index ${index}`);
+    console.log(`💰 [CartPage.getProductPrice] Locator: ${CartPageLocators.PRODUCT_PRICE}`);
+    
     const prices = this.page.locator(CartPageLocators.PRODUCT_PRICE);
-    await prices.nth(index).waitFor({ state: 'visible', timeout: 10000 });
-    return await prices.nth(index).textContent() || '';
+    const count = await prices.count();
+    console.log(`💰 [CartPage.getProductPrice] Found ${count} product price elements`);
+    
+    console.log(`💰 [CartPage.getProductPrice] Waiting for element at index ${index} to be visible...`);
+    try {
+      await prices.nth(index).waitFor({ state: 'visible', timeout: 10000 });
+      console.log(`💰 [CartPage.getProductPrice] Element is visible`);
+    } catch (error) {
+      console.error(`❌ [CartPage.getProductPrice] Element NOT visible after 10s:`, error);
+      throw error;
+    }
+    
+    const text = await prices.nth(index).textContent() || '';
+    console.log(`💰 [CartPage.getProductPrice] Product price text: "${text}"`);
+    return text;
   }
 
   async getProductQuantity(index: number = 0): Promise<string> {

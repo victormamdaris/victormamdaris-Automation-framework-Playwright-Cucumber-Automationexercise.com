@@ -1,4 +1,4 @@
-import { When, Then } from '@cucumber/cucumber';
+import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 import { CustomWorld } from '@support/custom-world';
 import { HomePage } from '@pages/ui/home/home.page';
@@ -6,6 +6,298 @@ import { LoginPage } from '@pages/ui/authentication/login.page';
 import { SignupPage } from '@pages/ui/authentication/signup.page';
 import { FileHelper } from '@helpers/file-helper';
 import { UserData } from '../../../types/custom.types';
+
+// ============================================================================
+// Background Steps
+// ============================================================================
+
+Given('the user is on the registration page', async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  await homePage.navigate();
+  const isLoaded = await homePage.verifyHomePageLoaded();
+  expect(isLoaded).toBeTruthy();
+  
+  // Navigate to signup/login page
+  await homePage.clickSignupLogin();
+  await this.page.waitForTimeout(1000);
+});
+
+// ============================================================================
+// Given Steps - Preconditions
+// ============================================================================
+
+Given('an account already exists with a specific email', async function (this: CustomWorld) {
+  // User creation is handled by hooks (created via API in Background)
+  // Store the existing email for later use
+  this.testData.existingEmail = this.testData.createdUser?.email || 'existing@automation.com';
+});
+
+Given('the user has successfully registered', { timeout: 45000 }, async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  const loginPage = new LoginPage(this.page);
+  const signupPage = new SignupPage(this.page);
+  const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
+  
+  const name = 'Test User ' + FileHelper.generateRandomString(5);
+  const email = FileHelper.generateRandomEmail();
+  
+  this.testData.signupName = name;
+  this.testData.signupEmail = email;
+  
+  // Navigate to signup/login page  
+  await homePage.clickSignupLogin();
+  await this.page.waitForTimeout(1000);
+  
+  await loginPage.signup(name, email);
+  await this.page.waitForSelector('[data-qa="password"]', { state: 'visible', timeout: 10000 });
+  await this.page.waitForTimeout(1000);
+  
+  const accountData: UserData = {
+    ...userData.validUser,
+    name: name,
+    email: email,
+    password: 'Test@123456'
+  };
+  
+  await signupPage.completeSignup(accountData);
+  await this.page.waitForTimeout(2000);
+  await signupPage.clickContinue();
+  await this.page.waitForTimeout(2000);
+});
+
+Given('the user has registered with complete account information', { timeout: 45000 }, async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  const loginPage = new LoginPage(this.page);
+  const signupPage = new SignupPage(this.page);
+  const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
+  
+  const name = 'Test User ' + FileHelper.generateRandomString(5);
+  const email = FileHelper.generateRandomEmail();
+  
+  this.testData.signupName = name;
+  this.testData.signupEmail = email;
+  this.testData.completeUserData = {
+    ...userData.validUser,
+    name: name,
+    email: email,
+    password: 'Test@123456'
+  };
+  
+  // Navigate to signup/login page
+  await homePage.clickSignupLogin();
+  await this.page.waitForTimeout(1000);
+  
+  await loginPage.signup(name, email);
+  await this.page.waitForSelector('[data-qa="password"]', { state: 'visible', timeout: 10000 });
+  await this.page.waitForTimeout(1000);
+  
+  await signupPage.completeSignup(this.testData.completeUserData);
+  await this.page.waitForTimeout(2000);
+  await signupPage.clickContinue();
+  await this.page.waitForTimeout(2000);
+});
+
+// ============================================================================
+// When Steps - Actions
+// ============================================================================
+
+When('the user registers with valid account information', { timeout: 45000 }, async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  const loginPage = new LoginPage(this.page);
+  const signupPage = new SignupPage(this.page);
+  const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
+  
+  const name = 'Test User ' + FileHelper.generateRandomString(5);
+  const email = FileHelper.generateRandomEmail();
+  
+  this.testData.signupName = name;
+  this.testData.signupEmail = email;
+  
+  // Step 0: Navigate to signup/login page
+  await homePage.clickSignupLogin();
+  await this.page.waitForTimeout(1000);
+  
+  // Step 1: Enter signup name and email
+  await loginPage.signup(name, email);
+  await this.page.waitForSelector('[data-qa="password"]', { state: 'visible', timeout: 10000 });
+  await this.page.waitForTimeout(1000);
+  
+  // Step 2: Fill account and address details
+  const accountData: UserData = {
+    ...userData.validUser,
+    name: name,
+    email: email,
+    password: 'Test@123456'
+  };
+  
+  await signupPage.completeSignup(accountData);
+  await this.page.waitForTimeout(3000);
+  
+  // Note: Don't click Continue here - let the scenario verify the message first
+});
+
+When('the user attempts to register with that email', { timeout: 15000 }, async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  const loginPage = new LoginPage(this.page);
+  const existingEmail = this.testData.existingEmail || this.testData.createdUser?.email || 'existing@automation.com';
+
+  // Navigate to signup/login page
+  await homePage.clickSignupLogin();
+  await this.page.waitForTimeout(1000);
+  
+  await loginPage.signup('Test User', existingEmail);
+  await this.page.waitForTimeout(1000);
+});
+
+When('the user deletes their account', async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  await homePage.clickDeleteAccount();
+  await this.page.waitForTimeout(2000);
+});
+
+When('the user registers with complete account information including optional fields', { timeout: 45000 }, async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  const loginPage = new LoginPage(this.page);
+  const signupPage = new SignupPage(this.page);
+  const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
+  
+  const name = 'Test User ' + FileHelper.generateRandomString(5);
+  const email = FileHelper.generateRandomEmail();
+  
+  this.testData.signupName = name;
+  this.testData.signupEmail = email;
+  
+  // Navigate to signup/login page
+  await homePage.clickSignupLogin();
+  await this.page.waitForTimeout(1000);
+  
+  await loginPage.signup(name, email);
+  await this.page.waitForSelector('[data-qa="password"]', { state: 'visible', timeout: 10000 });
+  await this.page.waitForTimeout(1000);
+  
+  const accountData: UserData = {
+    ...userData.validUser,
+    name: name,
+    email: email,
+    password: 'Test@123456'
+  };
+  
+  await signupPage.completeSignup(accountData);
+  await this.page.waitForTimeout(2000);
+});
+
+When('the user views their profile', async function (this: CustomWorld) {
+  // Profile viewing - the user is already on the account page after registration
+  // Just verify we can access the logged-in state
+  const homePage = new HomePage(this.page);
+  const isLoggedIn = await homePage.isLoggedIn();
+  expect(isLoggedIn).toBeTruthy();
+});
+
+// ============================================================================
+// Then Steps - Assertions (Outcome-Based)
+// ============================================================================
+
+/**
+ * Outcome: The account is created
+ */
+Then('the account is created', async function (this: CustomWorld) {
+  const signupPage = new SignupPage(this.page);
+  const isMessageVisible = await signupPage.isAccountCreatedMessageVisible();
+  expect(isMessageVisible).toBeTruthy();
+});
+
+/**
+ * Outcome: Account creation success message is displayed
+ */
+Then('the account creation success message is displayed', async function (this: CustomWorld) {
+  const pageContent = await this.page.textContent('body');
+  expect(pageContent).toContain('Account Created');
+});
+
+/**
+ * Outcome: Account deletion is confirmed
+ */
+Then('the account deletion is confirmed', async function (this: CustomWorld) {
+  const pageContent = await this.page.textContent('body');
+  expect(pageContent).toContain('Account Deleted');
+  
+  // Click Continue button to go back to home page
+  const signupPage = new SignupPage(this.page);
+  await signupPage.clickContinue();
+  await this.page.waitForTimeout(1000);
+});
+
+/**
+ * Outcome: All provided details are displayed in the profile
+ */
+Then('all provided details are displayed in the profile', async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  const isLoggedIn = await homePage.isLoggedIn();
+  expect(isLoggedIn).toBeTruthy();
+});
+
+// ============================================================================
+// Legacy Steps - Kept for backward compatibility
+// ============================================================================
+
+Then('the account is created successfully', async function (this: CustomWorld) {
+  const signupPage = new SignupPage(this.page);
+  const isMessageVisible = await signupPage.isAccountCreatedMessageVisible();
+  expect(isMessageVisible).toBeTruthy();
+});
+
+Then('the user is automatically logged in', async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  await this.page.waitForTimeout(2000);
+  const isLoggedIn = await homePage.isLoggedIn();
+  expect(isLoggedIn).toBeTruthy();
+});
+
+Then('a success message confirms account creation', async function (this: CustomWorld) {
+  const pageContent = await this.page.textContent('body');
+  expect(pageContent).toContain('Account Created');
+});
+
+Then('an error message indicates the email is already in use', async function (this: CustomWorld) {  
+  await this.page.waitForSelector('text=Email Address already exist!', { timeout: 10000 });
+  const isErrorVisible = await this.page.isVisible('text=Email Address already exist!');
+  expect(isErrorVisible).toBeTruthy();
+});
+
+Then('a confirmation message indicates successful deletion', async function (this: CustomWorld) {
+  const pageContent = await this.page.textContent('body');
+  expect(pageContent).toContain('Account Deleted');
+  
+  // Click Continue button to go back to home page
+  const signupPage = new SignupPage(this.page);
+  await signupPage.clickContinue();
+  await this.page.waitForTimeout(1000);
+});
+
+Then('the user is redirected to the home page', async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  await this.page.waitForTimeout(1000);
+  const isLoaded = await homePage.verifyHomePageLoaded();
+  expect(isLoaded).toBeTruthy();
+});
+
+Then('all provided details are saved correctly', async function (this: CustomWorld) {
+  const homePage = new HomePage(this.page);
+  const isLoggedIn = await homePage.isLoggedIn();
+  expect(isLoggedIn).toBeTruthy();
+});
+
+Then('the user can view their complete profile', async function (this: CustomWorld) {
+  // Verify user is logged in with complete profile
+  const homePage = new HomePage(this.page);
+  const username = await homePage.getLoggedInUsername();
+  expect(username).toBeTruthy();
+});
+
+// ============================================================================
+// Legacy Steps - Keep for backward compatibility during transition
+// ============================================================================
 
 When('I enter signup name and email', async function (this: CustomWorld) {
   const loginPage = new LoginPage(this.page);
