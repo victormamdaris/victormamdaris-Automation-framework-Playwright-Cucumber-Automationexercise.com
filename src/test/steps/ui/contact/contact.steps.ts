@@ -5,12 +5,13 @@ import { HomePage } from '@pages/ui/home/home.page';
 import { ContactPage } from '@pages/ui/contact/contact.page';
 import { FileHelper } from '@helpers/file-helper';
 import { ContactData } from '../../../types/custom.types';
+import { MemoryKeys } from '../../../../support/screenplay/Memory';
 
 // ============================================================================
 // Background Steps
 // ============================================================================
 
-Given('the user is on the contact page', async function (this: CustomWorld) {
+Given('the user is on the contact page', { timeout: 15000 }, async function (this: CustomWorld) {
   const homePage = new HomePage(this.page);
   await homePage.navigate();
   const isLoaded = await homePage.verifyHomePageLoaded();
@@ -35,7 +36,7 @@ When('the user submits a contact request with valid details', async function (th
     message: 'This is a test message for contact form'
   };
   
-  this.testData.contactData = contactData;
+  this.actor.remember(MemoryKeys.CONTACT_DATA, contactData);
   await contactPage.fillContactForm(contactData);
   
   // Set up handler BEFORE clicking - it will auto-accept when dialog appears
@@ -58,7 +59,7 @@ When('the user submits a contact request with valid details and a file attachmen
     message: 'This is a test message with file attachment'
   };
   
-  this.testData.contactData = contactData;
+  this.actor.remember(MemoryKeys.CONTACT_DATA, contactData);
   await contactPage.fillContactForm(contactData);
   
   // Attach file
@@ -190,7 +191,7 @@ When('I fill contact form with valid details', async function (this: CustomWorld
     message: 'This is a test message for contact form'
   };
   
-  this.testData.contactData = contactData;
+  this.actor.remember(MemoryKeys.CONTACT_DATA, contactData);
   await contactPage.fillContactForm(contactData);
 });
 

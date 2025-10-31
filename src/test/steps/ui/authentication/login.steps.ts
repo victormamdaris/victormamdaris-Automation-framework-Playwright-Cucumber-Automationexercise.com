@@ -5,6 +5,7 @@ import { HomePage } from '@pages/ui/home/home.page';
 import { LoginPage } from '@pages/ui/authentication/login.page';
 import { SignupPage } from '@pages/ui/authentication/signup.page';
 import { FileHelper } from '@helpers/file-helper';
+import { MemoryKeys } from '../../../../support/screenplay/Memory';
 
 // ============================================================================
 // Background Steps
@@ -31,8 +32,9 @@ When('the user logs in with valid credentials', { timeout: 25000 }, async functi
   await this.page.waitForTimeout(1000);
   
   // Use credentials from created user (created via API in Background)
-  if (this.testData.createdUser) {
-    await loginPage.login(this.testData.createdUser.email, this.testData.createdUser.password);
+  const createdUser = this.actor.recall<any>(MemoryKeys.CREATED_USER);
+  if (createdUser) {
+    await loginPage.login(createdUser.email, createdUser.password);
   } else {
     // Fallback: use test data file
     const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
@@ -180,8 +182,9 @@ When('I login with valid credentials', async function (this: CustomWorld) {
   const loginPage = new LoginPage(this.page);
   
   // Use credentials from created user (created via API in Background)
-  if (this.testData.createdUser) {
-    await loginPage.login(this.testData.createdUser.email, this.testData.createdUser.password);
+  const createdUser = this.actor.recall<any>(MemoryKeys.CREATED_USER);
+  if (createdUser) {
+    await loginPage.login(createdUser.email, createdUser.password);
   } else {
     // Fallback: use test data file
     const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');

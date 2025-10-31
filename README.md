@@ -12,6 +12,7 @@ A comprehensive automation testing framework built with **Playwright** and **Cuc
 - [Configuration](#-configuration)
 - [Running Tests](#-running-tests)
 - [Test Tags](#-test-tags)
+- [Screenplay Pattern](#-screenplay-pattern-memoryactor)
 - [API Testing](#-api-testing)
 - [UI Testing](#-ui-testing)
 - [GitHub Actions](#-github-actions)
@@ -25,6 +26,7 @@ A comprehensive automation testing framework built with **Playwright** and **Cuc
 - ✅ **BDD Framework** with Cucumber for readable test scenarios
 - ✅ **Dual Testing** - Both UI and API tests in one framework
 - ✅ **Page Object Model** design pattern for UI tests
+- ✅ **Screenplay Pattern** - Memory/Actor for clean state management
 - ✅ **API Services** layer for clean API test organization
 - ✅ **Multi-browser support** (Chromium, Firefox, WebKit)
 - ✅ **Multi-environment support** (Dev, Staging, Production)
@@ -34,7 +36,7 @@ A comprehensive automation testing framework built with **Playwright** and **Cuc
 - ✅ **HTML Reports** with detailed test results
 - ✅ **Serenity BDD Reports** with interactive dashboards (opens directly in browser!)
 - ✅ **CI/CD Integration** with GitHub Actions
-- ✅ **TypeScript** for type safety
+- ✅ **TypeScript** for type safety and type-safe state management
 - ✅ **Separated folder structure** for UI and API tests
 
 ## 🛠 Tech Stack
@@ -106,9 +108,12 @@ src/test/
 │       ├── products/
 │       ├── cart/
 │       └── contact/
-├── support/             # Cucumber support files
+├── support/             # Cucumber support files & Screenplay Pattern
 │   ├── custom-world.ts
-│   └── hooks.ts
+│   ├── hooks.ts
+│   └── screenplay/           # NEW: Screenplay Pattern components
+│       ├── Memory.ts         # State management with type-safe storage
+│       └── Actor.ts          # Actor facade for Memory + Page
 ├── test-data/           # Test data files
 │   ├── users.json
 │   ├── products.json
@@ -310,6 +315,63 @@ npx cucumber-js --tags "@authentication and not @negative"
 | `@positive` | Positive test scenarios |
 | `@negative` | Negative test scenarios |
 | `@authentication` | Authentication related tests |
+
+## 🎭 Screenplay Pattern (Memory/Actor)
+
+The framework implements the **Screenplay Pattern's Remember/RememberThat** feature for clean, type-safe state management.
+
+### Why Screenplay Pattern?
+
+✅ **Type-safe state storage** - Generic types ensure data integrity  
+✅ **Automatic cleanup** - Memory cleared between scenarios  
+✅ **Better readability** - `actor.remember()` / `actor.recall()` vs `testData.user`  
+✅ **MemoryKeys constants** - Prevents typos and improves maintainability  
+
+### Quick Example
+
+```typescript
+// In step definitions
+import { MemoryKeys } from '@support/screenplay/Memory';
+
+// Store data
+await this.actor.remember(MemoryKeys.CREATED_USER, {
+  email: 'test@example.com',
+  password: 'SecurePass123'
+});
+
+// Retrieve data (type-safe!)
+const user = await this.actor.recall<UserData>(MemoryKeys.CREATED_USER);
+console.log(user.email); // TypeScript knows the structure!
+
+// Check if exists
+if (this.actor.hasRemembered(MemoryKeys.SIGNUP_EMAIL)) {
+  // Do something
+}
+
+// Forget specific data
+this.actor.forget(MemoryKeys.SIGNUP_EMAIL);
+
+// Clear all (automatic in hooks)
+this.actor.forgetAll();
+```
+
+### Available Memory Keys
+
+```typescript
+MemoryKeys.CREATED_USER        // User created via API/UI
+MemoryKeys.SIGNUP_EMAIL        // Email during signup
+MemoryKeys.SIGNUP_NAME         // Name during signup
+MemoryKeys.CONTACT_DATA        // Contact form data
+MemoryKeys.EXISTING_EMAIL      // Existing user email
+MemoryKeys.COMPLETE_USER_DATA  // Complete registration data
+```
+
+### 📖 Complete Documentation
+
+For detailed usage, migration guide, and best practices:  
+**[📖 Read Full Screenplay Pattern Guide](docs/SCREENPLAY_MEMORY.md)**
+
+---
 
 ## 🔌 API Testing
 
@@ -712,11 +774,29 @@ npm run serenity:clean  # Clean Serenity results
 - Use meaningful step text
 - Avoid duplicating step definitions
 
+### State Management (Screenplay Pattern)
+- **Use `actor.remember()` and `actor.recall()`** for test state instead of `testData`
+- Use `MemoryKeys` constants for type safety
+- State is automatically cleaned between scenarios
+- Type-safe storage with TypeScript generics
+- **[📖 Full Guide: Screenplay Pattern Memory](docs/SCREENPLAY_MEMORY.md)**
+
+**Example:**
+```typescript
+// ✅ Good - Using Screenplay Pattern
+await this.actor.remember(MemoryKeys.CREATED_USER, userData);
+const user = await this.actor.recall(MemoryKeys.CREATED_USER);
+
+// ❌ Old way - Deprecated
+this.testData.createdUser = userData;
+```
+
 ### Test Data
 - Use JSON files for test data
 - Generate dynamic data when needed
 - Avoid hardcoded credentials
 - Use environment-specific data
+- Store runtime data in Actor Memory (not testData)
 
 ## 🐛 Troubleshooting
 
@@ -796,4 +876,11 @@ Contributions, issues, and feature requests are welcome!
 
 **Note:** This README is automatically maintained. When project structure or configuration changes, update this file accordingly.
 
-**Last Updated:** October 2025
+**Last Updated:** October 31, 2025
+
+**Recent Updates:**
+- ✅ Added Screenplay Pattern (Memory/Actor) for state management
+- ✅ Complete documentation in [docs/SCREENPLAY_MEMORY.md](docs/SCREENPLAY_MEMORY.md)
+- ✅ Migrated step definitions to use `actor.remember()` / `actor.recall()`
+- ✅ Added MemoryKeys constants for type safety
+- ✅ Project structure cleanup (removed unnecessary README files)

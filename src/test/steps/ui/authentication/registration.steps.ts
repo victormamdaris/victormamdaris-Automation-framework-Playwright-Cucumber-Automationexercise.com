@@ -6,6 +6,7 @@ import { LoginPage } from '@pages/ui/authentication/login.page';
 import { SignupPage } from '@pages/ui/authentication/signup.page';
 import { FileHelper } from '@helpers/file-helper';
 import { UserData } from '../../../types/custom.types';
+import { MemoryKeys } from '../../../../support/screenplay/Memory';
 
 // ============================================================================
 // Background Steps
@@ -29,7 +30,9 @@ Given('the user is on the registration page', async function (this: CustomWorld)
 Given('an account already exists with a specific email', async function (this: CustomWorld) {
   // User creation is handled by hooks (created via API in Background)
   // Store the existing email for later use
-  this.testData.existingEmail = this.testData.createdUser?.email || 'existing@automation.com';
+  const createdUser = this.actor.recall<any>(MemoryKeys.CREATED_USER);
+  const existingEmail = createdUser?.email || 'existing@automation.com';
+  this.actor.remember(MemoryKeys.EXISTING_EMAIL, existingEmail);
 });
 
 Given('the user has successfully registered', { timeout: 45000 }, async function (this: CustomWorld) {
@@ -41,8 +44,8 @@ Given('the user has successfully registered', { timeout: 45000 }, async function
   const name = 'Test User ' + FileHelper.generateRandomString(5);
   const email = FileHelper.generateRandomEmail();
   
-  this.testData.signupName = name;
-  this.testData.signupEmail = email;
+  this.actor.remember(MemoryKeys.SIGNUP_NAME, name);
+  this.actor.remember(MemoryKeys.SIGNUP_EMAIL, email);
   
   // Navigate to signup/login page  
   await homePage.clickSignupLogin();
@@ -74,14 +77,14 @@ Given('the user has registered with complete account information', { timeout: 45
   const name = 'Test User ' + FileHelper.generateRandomString(5);
   const email = FileHelper.generateRandomEmail();
   
-  this.testData.signupName = name;
-  this.testData.signupEmail = email;
-  this.testData.completeUserData = {
+  this.actor.remember(MemoryKeys.SIGNUP_NAME, name);
+  this.actor.remember(MemoryKeys.SIGNUP_EMAIL, email);
+  this.actor.remember(MemoryKeys.COMPLETE_USER_DATA, {
     ...userData.validUser,
     name: name,
     email: email,
     password: 'Test@123456'
-  };
+  });
   
   // Navigate to signup/login page
   await homePage.clickSignupLogin();
@@ -91,7 +94,8 @@ Given('the user has registered with complete account information', { timeout: 45
   await this.page.waitForSelector('[data-qa="password"]', { state: 'visible', timeout: 10000 });
   await this.page.waitForTimeout(1000);
   
-  await signupPage.completeSignup(this.testData.completeUserData);
+  const completeUserData = this.actor.recallOrThrow<UserData>(MemoryKeys.COMPLETE_USER_DATA);
+  await signupPage.completeSignup(completeUserData);
   await this.page.waitForTimeout(2000);
   await signupPage.clickContinue();
   await this.page.waitForTimeout(2000);
@@ -110,8 +114,8 @@ When('the user registers with valid account information', { timeout: 45000 }, as
   const name = 'Test User ' + FileHelper.generateRandomString(5);
   const email = FileHelper.generateRandomEmail();
   
-  this.testData.signupName = name;
-  this.testData.signupEmail = email;
+  this.actor.remember(MemoryKeys.SIGNUP_NAME, name);
+  this.actor.remember(MemoryKeys.SIGNUP_EMAIL, email);
   
   // Step 0: Navigate to signup/login page
   await homePage.clickSignupLogin();
@@ -139,7 +143,9 @@ When('the user registers with valid account information', { timeout: 45000 }, as
 When('the user attempts to register with that email', { timeout: 15000 }, async function (this: CustomWorld) {
   const homePage = new HomePage(this.page);
   const loginPage = new LoginPage(this.page);
-  const existingEmail = this.testData.existingEmail || this.testData.createdUser?.email || 'existing@automation.com';
+  
+  const createdUser = this.actor.recall<any>(MemoryKeys.CREATED_USER);
+  const existingEmail = this.actor.recall<string>(MemoryKeys.EXISTING_EMAIL) || createdUser?.email || 'existing@automation.com';
 
   // Navigate to signup/login page
   await homePage.clickSignupLogin();
@@ -164,8 +170,8 @@ When('the user registers with complete account information including optional fi
   const name = 'Test User ' + FileHelper.generateRandomString(5);
   const email = FileHelper.generateRandomEmail();
   
-  this.testData.signupName = name;
-  this.testData.signupEmail = email;
+  this.actor.remember(MemoryKeys.SIGNUP_NAME, name);
+  this.actor.remember(MemoryKeys.SIGNUP_EMAIL, email);
   
   // Navigate to signup/login page
   await homePage.clickSignupLogin();
@@ -305,8 +311,8 @@ When('I enter signup name and email', async function (this: CustomWorld) {
   const name = 'Test User ' + FileHelper.generateRandomString(5);
   const email = FileHelper.generateRandomEmail();
   
-  this.testData.signupName = name;
-  this.testData.signupEmail = email;
+  this.actor.remember(MemoryKeys.SIGNUP_NAME, name);
+  this.actor.remember(MemoryKeys.SIGNUP_EMAIL, email);
   
   await loginPage.signup(name, email);
 });
@@ -315,7 +321,8 @@ When('I enter signup name and existing email', async function (this: CustomWorld
   const loginPage = new LoginPage(this.page);
   
   // Use the email from the user created in Background (via API)
-  const existingEmail = this.testData.createdUser?.email || 'existing@automation.com';
+  const createdUser = this.actor.recall<any>(MemoryKeys.CREATED_USER);
+  const existingEmail = createdUser?.email || 'existing@automation.com';
   await loginPage.signup('Test User', existingEmail);
 });
 
@@ -333,9 +340,12 @@ When('I fill all account details', async function (this: CustomWorld) {
   const signupPage = new SignupPage(this.page);
   const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
   
+  const signupName = this.actor.recallOrThrow<string>(MemoryKeys.SIGNUP_NAME);
+  const signupEmail = this.actor.recallOrThrow<string>(MemoryKeys.SIGNUP_EMAIL);
+  
   const accountData: UserData = {
-    name: this.testData.signupName,
-    email: this.testData.signupEmail,
+    name: signupName,
+    email: signupEmail,
     password: 'Test@123456',
     title: 'Mr',
     dateOfBirth: userData.validUser.dateOfBirth
@@ -348,9 +358,12 @@ When('I fill all address details', async function (this: CustomWorld) {
   const signupPage = new SignupPage(this.page);
   const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
   
+  const signupName = this.actor.recallOrThrow<string>(MemoryKeys.SIGNUP_NAME);
+  const signupEmail = this.actor.recallOrThrow<string>(MemoryKeys.SIGNUP_EMAIL);
+  
   const addressData: UserData = {
-    name: this.testData.signupName,
-    email: this.testData.signupEmail,
+    name: signupName,
+    email: signupEmail,
     password: 'Test@123456',
     firstName: userData.validUser.firstName,
     lastName: userData.validUser.lastName,
@@ -399,8 +412,8 @@ When('I complete the registration process', { timeout: 30000 }, async function (
   const name = 'Test User ' + FileHelper.generateRandomString(5);
   const email = FileHelper.generateRandomEmail();
   
-  this.testData.signupName = name;
-  this.testData.signupEmail = email;
+  this.actor.remember(MemoryKeys.SIGNUP_NAME, name);
+  this.actor.remember(MemoryKeys.SIGNUP_EMAIL, email);
   
   await loginPage.signup(name, email);
   
@@ -446,9 +459,12 @@ When('I fill all account details including optional fields', async function (thi
   const signupPage = new SignupPage(this.page);
   const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
   
+  const signupName = this.actor.recallOrThrow<string>(MemoryKeys.SIGNUP_NAME);
+  const signupEmail = this.actor.recallOrThrow<string>(MemoryKeys.SIGNUP_EMAIL);
+  
   const accountData: UserData = {
-    name: this.testData.signupName,
-    email: this.testData.signupEmail,
+    name: signupName,
+    email: signupEmail,
     password: 'Test@123456',
     title: 'Mr',
     dateOfBirth: userData.validUser.dateOfBirth
@@ -461,9 +477,12 @@ When('I fill all address details including optional fields', async function (thi
   const signupPage = new SignupPage(this.page);
   const userData = await FileHelper.readJsonFile('src/test/test-data/users.json');
   
+  const signupName = this.actor.recallOrThrow<string>(MemoryKeys.SIGNUP_NAME);
+  const signupEmail = this.actor.recallOrThrow<string>(MemoryKeys.SIGNUP_EMAIL);
+  
   const addressData: UserData = {
-    name: this.testData.signupName,
-    email: this.testData.signupEmail,
+    name: signupName,
+    email: signupEmail,
     password: 'Test@123456',
     firstName: userData.validUser.firstName,
     lastName: userData.validUser.lastName,

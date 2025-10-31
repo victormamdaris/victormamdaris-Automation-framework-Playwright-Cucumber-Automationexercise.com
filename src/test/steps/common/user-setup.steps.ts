@@ -5,6 +5,7 @@ import { UserHelper } from '@helpers/user-helper';
 import { LoginPage } from '@pages/ui/authentication/login.page';
 import { HomePage } from '@pages/ui/home/home.page';
 import { expect } from '@playwright/test';
+import { MemoryKeys } from '../../../support/screenplay/Memory';
 
 Given('the user is created', async function (this: CustomWorld) {
   const authService = new AuthenticationApiService(this.apiClient);
@@ -15,14 +16,18 @@ Given('the user is created', async function (this: CustomWorld) {
   // Create account via API
   const response = await authService.createAccount(userData);
   
-  // Save credentials in test context for later use
-  this.testData.createdUser = {
+  const user = {
     email: userData.email,
     password: userData.password,
     name: userData.name
   };
   
-  // Store response for verification if needed
+  // Save credentials using Screenplay Pattern (NEW WAY)
+  this.actor.remember(MemoryKeys.CREATED_USER, user);
+  this.actor.remember('createAccountResponse', response);
+  
+  // Also save in testData for backwards compatibility (LEGACY)
+  this.testData.createdUser = user;
   this.testData.createAccountResponse = response;
 });
 
@@ -33,13 +38,14 @@ const loggedInStep = async function (this: CustomWorld) {
   const homePage = new HomePage(this.page);
   
   // Use credentials from created user
-  if (this.testData.createdUser) {
+  const createdUser = this.actor.recall<any>(MemoryKeys.CREATED_USER);
+  if (createdUser) {
     // Navigate to login form
     await homePage.clickSignupLogin();
     await this.page.waitForTimeout(1000);
     
     // Perform login
-    await loginPage.login(this.testData.createdUser.email, this.testData.createdUser.password);
+    await loginPage.login(createdUser.email, createdUser.password);
     await this.page.waitForTimeout(2000);
     
     // Verify logged in
